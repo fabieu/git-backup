@@ -19,16 +19,13 @@ logging.basicConfig(
 
 def main():
     if config_valid():
-        project_list = get_projects()
-        target_path = config["PATH"]["TARGET"]
-
-        if not config["BACKUP"]["ARCHIVED"]:
-            project_list = [project for project in project_list if project["archived"] == False]
+        projects = get_projects_gitlab()
+        target_path = config["path"]["target"]
 
         if not Path(target_path).absolute().exists():
             Path(target_path).absolute().mkdir(parents=True, exist_ok=True)
 
-        for project in project_list:
+        for project in projects:
             # If repository isn't located in the target path do a git clone --bare, otherwise update it via git remote update --prune
             repo_path = (Path(target_path) / Path(project["path"])).absolute()
 
@@ -47,8 +44,8 @@ def config_valid():
         global config
         config = yaml.safe_load(open("config.yaml"))
 
-        if not config["GITLAB"]["CLONE_TYPE"] in ("ssh", "http"):
-            config_error('GITLAB.CLONE_TYPE', 'Wrong clone type in config.yaml specifed. Only "ssh" and "http" are allowed')
+        if not config["git"]["clone"] in ("ssh", "http"):
+            config_error('git.clone', 'Wrong clone type in config.yaml specifed. Only "ssh" and "http" are allowed')
 
         return True
 
@@ -57,11 +54,11 @@ def config_valid():
         return False
 
 
-# Get all and filter projects from a user - Reference: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
-def get_projects():
+# Get all projects of the associated user based on membership - Reference: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
+def get_projects_gitlab():
     projects = []
-    url = f'{config["GITLAB"]["HOST"]}/api/v4/projects'
-    headers = {'PRIVATE-TOKEN': config["GITLAB"]["PERSONAL_ACCESS_TOKEN"]}
+    url = f'{config["gitlab"]["host"]}/api/v4/projects'
+    headers = {'PRIVATE-TOKEN': config["gitlab"]["personal_access_token"]}
     payload = {
         'membership': True,
         'per_page': 50,
@@ -87,9 +84,9 @@ def get_projects():
 def clone_repo(repo_path, project):
     project_name = project["name_with_namespace"]
 
-    if config["GITLAB"]["CLONE_TYPE"] == "ssh":
+    if config["git"]["clone"] == "ssh":
         clone_url = project["ssh_url_to_repo"]
-    elif config["GITLAB"]["CLONE_TYPE"] == "http":
+    elif config["git"]["clone"] == "http":
         clone_url = project["http_url_to_repo"]
 
     logging.info(f'Cloning {project_name} ({clone_url}) to {repo_path}')
