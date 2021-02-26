@@ -1,0 +1,8 @@
+GITLAB:
+  HOST: "https://gitlab.com"
+  PERSONAL_ACCESS_TOKEN: ""
+  CLONE_TYPE: "http"
+PATH:
+  TARGET: "repos"
+BACKUP:
+  ARCHIVED: true
