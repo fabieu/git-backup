@@ -11,7 +11,7 @@ config = None
 # Basic Logging Config
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.INFO,
+    level=logging.WARNING,
     datefmt='%Y-%m-%d %H:%M:%S',
     format='%(asctime)s %(levelname)s %(message)s'
 )
@@ -20,16 +20,16 @@ logging.basicConfig(
 def main():
     if config_valid():
         projects = get_projects_gitlab()
-        target_path = config["path"]["target"]
+        target_path = Path(config["path"]["target"]).absolute()
 
-        if not Path(target_path).absolute().exists():
-            Path(target_path).absolute().mkdir(parents=True, exist_ok=True)
+        if not target_path.exists():
+            target_path.mkdir(parents=True, exist_ok=True)
 
         for project in projects:
-            # If repository isn't located in the target path do a git clone --bare, otherwise update it via git remote update --prune
-            repo_path = (Path(target_path) / Path(project["path"])).absolute()
+            repo_path = (target_path / Path(project["path"])).absolute()
 
-            if Path(repo_path).exists():
+            # If repository isn't located in the target path do a git clone --bare, otherwise update it via git remote update --prune
+            if repo_path.exists():
                 update_repo(repo_path, project)
             else:
                 clone_repo(repo_path, project)
