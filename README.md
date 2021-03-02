@@ -12,7 +12,7 @@ Constantly backup all your repositories from GitHub and/or GitLab to the local f
 Clone this repository to your machine
 
 ```bash
-git clone https://github.com/fabieu/git-backup
+git clone https://github.com/fabieu/git-backup.git
 ```
 
 Move into the cloned repository
