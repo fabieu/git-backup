@@ -12,16 +12,16 @@ Constantly backup all your repositories from GitHub and/or GitLab to the local f
 Clone this repository to your machine
 
 ```bash
-git clone https://github.com/fabieu/gitserver-backup
+git clone https://github.com/fabieu/git-backup
 ```
 
 Move into the cloned repository
 
 ```bash
-cd ./gitserver-backup
+cd ./git-backup
 ```
 
-Installing required dependencies in a virtual environment:
+Install the required dependencies in a virtual environment:
 
 ```bash
 python -m pip install pipenv
