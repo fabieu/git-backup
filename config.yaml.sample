@@ -1,10 +1,12 @@
 gitlab:
+  enabled: true
   host: "https://gitlab.com"
   personal_access_token: ""
 github:
+  enabled: true
   host: "https://api.github.com"
   personal_access_token: ""
 git:
-  clone: "ssh"
+  clone: "http"
 path:
   target: "repos"
