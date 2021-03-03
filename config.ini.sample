@@ -1,0 +1,15 @@
+[gitlab]
+enabled = true
+host = https://gitlab.com
+personal_access_token = YOUR_PERSONAL_ACCESS_TOKEN
+clone_method = http
+
+[github]
+enabled = true
+host = https://api.github.com
+personal_access_token = YOUR_PERSONAL_ACCESS_TOKEN
+clone_method = http
+
+[path]
+target = repos
+

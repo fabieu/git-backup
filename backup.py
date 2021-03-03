@@ -1,9 +1,9 @@
 import requests
 import git
-import yaml
 import logging
 import sys
 from pathlib import Path
+from configparser import ConfigParser
 
 # Global variables
 config = None
@@ -17,44 +17,82 @@ logging.basicConfig(
 )
 
 
+class InvalidConfig(Exception):
+    pass
+
+
+class ConfigValidator(ConfigParser):
+    def __init__(self, config_file):
+        super(ConfigValidator, self).__init__()
+
+        self.config_file = config_file
+        self.read(config_file)
+        self.validate_config()
+
+    def validate_config(self):
+        required_values = {
+            'gitlab': {
+                'enabled': ('true', 'false'),
+                'host': None,
+                'personal_access_token': None,
+                'clone_method': ('http', 'ssh')
+            },
+            'github': {
+                'enabled': ('true', 'false'),
+                'host': None,
+                'personal_access_token': None,
+                'clone_method': ('http', 'ssh')
+            },
+            'path': {
+                'target': None
+            }
+        }
+
+        for section, keys in required_values.items():
+            if section not in self:
+                raise InvalidConfig(
+                    f'{self.__class__.__name__}: Missing section "{section}" in {self.config_file}')
+
+            for key, values in keys.items():
+                if key not in self[section] or self[section][key] in ('', 'YOUR_PERSONAL_ACCESS_TOKEN'):
+                    raise InvalidConfig(
+                        f'{self.__class__.__name__}: Missing value for "{key}" in section "{section}" in {self.config_file}')
+
+                if values:
+                    if self[section][key] not in values:
+                        allowed_values = "[{0}]".format(', '.join(map(str, values)))
+                        raise InvalidConfig(
+                            f'{self.__class__.__name__}: Invalid value for "{key}" under section "{section}" in {self.config_file} - allowed values are {allowed_values}')
+
+
 def main():
-    if config_valid():
-        repos = get_repositories()
-        target_path = Path(config["path"]["target"]).absolute()
+    validate_config()
+    repos = get_repositories()
+    target_path = Path(config["path"]["target"]).absolute()
 
-        # Create target path if it doesnt exist
-        if not target_path.exists():
-            target_path.mkdir(parents=True, exist_ok=True)
+    # Create target path if it doesnt exist
+    if not target_path.exists():
+        target_path.mkdir(parents=True, exist_ok=True)
 
-        for repo in repos:
-            # Determine the path for individual repositories based on the target path
-            repo_path = (target_path / Path(f'{repo["platform"]}_{repo["path"]}')).absolute()
+    for repo in repos:
+        # Determine the path for individual repositories based on the target path
+        repo_path = (target_path / Path(f'{repo["platform"]}_{repo["path"]}')).absolute()
 
-            # If repository isn't located in the target path do a git clone --bare, otherwise update it via git remote update --prune
-            if repo_path.exists():
-                update_repo(repo_path, repo)
-            else:
-                clone_repo(repo_path, repo)
+        # If repository isn't located in the target path do a git clone --bare, otherwise update it via git remote update --prune
+        if repo_path.exists():
+            update_repo(repo_path, repo)
+        else:
+            clone_repo(repo_path, repo)
 
 
-# TODO: Implement strict validation
-def config_valid():
-    def config_error(attribut, message):
-        logging.error(attribut + " : " + message)
-        raise SystemExit(2)
-
+def validate_config():
     try:
         global config
-        config = yaml.safe_load(open("config.yaml"))
+        config = ConfigValidator('config.ini')
 
-        if not config["git"]["clone"] in ("ssh", "http"):
-            config_error('git.clone', 'Wrong clone type in config.yaml specifed. Only "ssh" and "http" are allowed')
-
-        return True
-
-    except Exception as e:
-        logging.exception()
-        return False
+    except InvalidConfig as e:
+        logging.error(e)
+        raise SystemExit(2)
 
 
 def get_repositories():
@@ -106,6 +144,7 @@ def get_repositories_gitlab():
                 repo["web_url"] = instance["web_url"]
                 repo["clone_url_ssh"] = instance["ssh_url_to_repo"]
                 repo["clone_url_http"] = instance["http_url_to_repo"]
+                repo["clone_method"] = config["gitlab"]["clone_method"]
                 repos.append(repo)
 
             if response.headers["x-next-page"]:
@@ -156,6 +195,7 @@ def get_repositories_github():
                 repo["web_url"] = instance["html_url"]
                 repo["clone_url_ssh"] = instance["ssh_url"]
                 repo["clone_url_http"] = instance["clone_url"]
+                repo["clone_method"] = config["github"]["clone_method"]
                 repos.append(repo)
 
             if len(response.json()) != 0:
@@ -176,9 +216,9 @@ def get_repositories_github():
 def clone_repo(repo_path, repo):
     repo_name = repo["name"]
 
-    if config["git"]["clone"] == "ssh":
+    if repo["clone_method"] == "ssh":
         clone_url = repo["clone_url_ssh"]
-    elif config["git"]["clone"] == "http":
+    elif repo["clone_method"] == "http":
         clone_url = repo["clone_url_http"]
 
     logging.info(f'Cloning {repo_name} ({clone_url}) to {repo_path}')
