@@ -1,6 +1,6 @@
-# gitlab-backup
+# git-backup
 
-Constantly backup all your repositories from GitHub and/or GitLab to the local filesystem with a single Python script
+Backup all your repositories from GitHub and GitLab to your local filesystem. This script will automatically discover all projects based on a given personal access token and will clone them to the target path. If you rerun the script with the same target path specified it will update the repositories instead of cloning them again.
 
 ## Requirements
 
@@ -9,29 +9,61 @@ Constantly backup all your repositories from GitHub and/or GitLab to the local f
 
 ## Installation
 
-Clone this repository to your machine
+Clone this repository:
 
 ```bash
 git clone https://github.com/fabieu/git-backup.git
 ```
 
-Move into the cloned repository
+Move into the cloned repository:
 
 ```bash
 cd ./git-backup
 ```
 
-Install the required dependencies in a virtual environment:
+Install the required dependencies in a virtual environment with pipenv:
 
 ```bash
 python -m pip install pipenv
-pipenv install
+pipenv install --ignore-pipfile
 pipenv shell
 ```
 
+## Configuration
+
+The configuration takes place via a config file named **_config.ini_**  
+In the root path of the repository you can find a sample configuration file named _config.ini.sample_. It is recommended to rename the sample configuration and edit the necessary values.
+
+**Example Configuration:**
+
+```toml
+[gitlab]
+enabled = true
+host = https://gitlab.com
+personal_access_token = YOUR_PERSONAL_ACCESS_TOKEN
+clone_method = http
+
+[github]
+enabled = true
+host = https://api.github.com
+personal_access_token = YOUR_PERSONAL_ACCESS_TOKEN
+clone_method = http
+
+[path]
+target = repos
+```
+
+|          Key          |                                      Description                                       |    Section     |   Values    |
+| :-------------------: | :------------------------------------------------------------------------------------: | :------------: | :---------: |
+|        enabled        |                       Enable or disable the entire git platform                        | gitlab, github | true, false |
+|         host          |              Github or GitLab API (defaults to github.com and gitlab.com)              | gitlab, github |             |
+| personal_access_token |                         API token (view required scopes below)                         | gitlab, github |             |
+|     clone_method      |                Git clone method (requires preconfigured authentication)                | gitlab, github |  ssh, http  |
+|        target         | Absolute or relative path based on the script location for storing the repository data |      path      |             |
+
 ## Usage
 
-Run the Python script with
+Run the Python script:
 
 ```bash
 python backup.py
