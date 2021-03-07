@@ -36,7 +36,7 @@ In the root path of the repository you can find a sample configuration file name
 
 **Example Configuration:**
 
-```toml
+```
 [gitlab]
 enabled = true
 host = https://gitlab.com
