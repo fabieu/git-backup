@@ -61,6 +61,16 @@ target = repos
 |     clone_method      |                Git clone method (requires preconfigured authentication)                | gitlab, github |  ssh, http  |
 |        target         | Absolute or relative path based on the script location for storing the repository data |      path      |             |
 
+### API scopes
+
+**GitHub**
+
+![GitHub Scopes](./docs/github_scopes.png)
+
+**GitLab**
+
+![GitLab Scopes](./docs/gitlab_scopes.png)
+
 ## Usage
 
 Run the Python script:
